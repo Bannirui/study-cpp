@@ -26,6 +26,7 @@ bool XReadTask::Init(std::string file_name) {
 }
 
 void XReadTask::StartImpl() {
+    std::cout << "XReadTask::StartImpl() start" << std::endl;
     while (!is_exit) {
         if (ifs_.eof()) {
             break;
@@ -38,6 +39,13 @@ void XReadTask::StartImpl() {
             break;
         }
         data->set_size(ifs_.gcount());
-        std::cout << ifs_.gcount() << ", " << buf << std::endl;
+        std::cout << "read " << ifs_.gcount() << " bytes, addr is " << buf << std::endl;
+        if (this->ifs_.eof()) {
+            data->set_end(true);
+        }
+        if (this->next_) {
+            this->next_->PushBack(data);
+        }
     }
+    std::cout << "XReadTask::StartImpl() end" << std::endl;
 }

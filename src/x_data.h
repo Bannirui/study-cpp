@@ -15,6 +15,10 @@ public:
     void *New(long long mem_size);
 
     void set_size(long long s) { size_ = s; };
+    long long size() { return size_; };
+    void *data() { return data_; };
+    bool end() { return this->end_; }
+    void set_end(bool end) { this->end_ = end; };
 
     ~XData();
 
@@ -26,4 +30,5 @@ private:
     long long size_{0};
     long long mem_size_{0};
     std::shared_ptr<std::pmr::memory_resource> mem_pool_;
+    bool end_{false};
 };

@@ -17,6 +17,8 @@ public:
 
     int Decrypt(const char *in_data, int in_size, char *out_data, bool is_end = false);
 
+    int GetPadding(int dataSize);
+
 private:
     DES_key_schedule key_sch_;
 };

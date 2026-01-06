@@ -89,3 +89,12 @@ int XCrypt::Decrypt(const char *in_data, int in_size, char *out_data, bool is_en
     }
     return write_size;
 }
+
+int XCrypt::GetPadding(int dataSize) {
+    const int block_size = sizeof(const_DES_cblock);
+    int padding = block_size - (dataSize % block_size);
+    if (padding == 0) {
+        padding = block_size;
+    }
+    return padding;
+}
