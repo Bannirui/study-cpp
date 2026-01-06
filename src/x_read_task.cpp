@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include "x_data.h"
+
 bool XReadTask::Init(std::string file_name) {
     if (file_name.empty()) {
         return false;
@@ -28,8 +30,14 @@ void XReadTask::StartImpl() {
         if (ifs_.eof()) {
             break;
         }
-        char buf[1024] = {0};
-        ifs_.read(buf, sizeof(buf));
+        std::shared_ptr<XData> data = XData::Make(this->mem_pool_);
+        int dataSize = 1024;
+        void *buf = data->New(dataSize);
+        ifs_.read((char *) buf, sizeof(buf));
+        if (ifs_.gcount() <= 0) {
+            break;
+        }
+        data->set_size(ifs_.gcount());
         std::cout << ifs_.gcount() << ", " << buf << std::endl;
     }
 }

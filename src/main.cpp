@@ -4,8 +4,10 @@
 #include "x_crypt.h"
 
 int main() {
+    std::shared_ptr<std::pmr::memory_resource> memPool(new std::pmr::synchronized_pool_resource);
     XReadTask r_task;
     r_task.Init("asset/tmp.txt");
+    r_task.set_mem_pool(memPool);
     r_task.Start();
     r_task.Wait();
 
