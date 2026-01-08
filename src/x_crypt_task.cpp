@@ -8,39 +8,50 @@
 
 #include "x_crypt.h"
 
-void XCryptTask::Init(std::string &password) {
+void XCryptTask::Init(std::string& password)
+{
     this->enc_ = std::make_shared<XCrypt>();
     this->enc_->Init(password);
 }
 
-void XCryptTask::StartImpl() {
+void XCryptTask::StartImpl()
+{
     std::cout << "XCryptTask::StartImpl() start" << std::endl;
-    while (!this->is_exit) {
-        std::shared_ptr<XData> data = PopFront();
-        if (!data) {
+    while (!this->is_exit)
+    {
+        std::shared_ptr<XData> in = PopFront();
+        if (!in)
+        {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
-        std::cout << "crypt task, get data size " << data->size() << std::endl;
-        std::shared_ptr<XData> out = XData::Make(mem_pool_);
-        int out_size = out->size() + this->enc_->GetPadding(data->size());
-        out->New(out_size);
-        int data_size = 0;
-        bool isEnd = data->end();
-        std::cout << "end flag= " << isEnd << std::endl;
-        if (this->is_encrypt_) {
-            data_size = this->enc_->Encrypt((char *) data->data(), data->size(), (char *) out->data(), isEnd);
-            std::cout << "crypt finish, size " << data_size << ", data is " << (char *) out->data() << std::endl;
-        } else {
-            data_size = this->enc_->Decrypt((char *) data->data(), data->size(), (char *) out->data(), isEnd);
-            std::cout << "dcrypt finish, size " << data_size << ", data is " << (char *) out->data() << std::endl;
+        const bool isLastBlock = in->get_is_last_block();
+        const int  inSize      = in->size();
+        std::cout << "crypt task, get data size " << inSize << " bytes, last=" << isLastBlock << std::endl;
+        std::shared_ptr<XData> out        = XData::Make(mem_pool_);
+        int                    maxOutSize = inSize + (isLastBlock ? this->enc_->GetPadding(inSize) : 0);
+        out->New(maxOutSize);
+
+        int outSize = 0;
+        if (this->is_encrypt_)
+        {
+            outSize = this->enc_->Encrypt(static_cast<char*>(in->data()), inSize, static_cast<char*>(out->data()),
+                                          isLastBlock);
         }
-        out->set_size(data_size);
-        out->set_end(isEnd);
-        if (this->next_) {
+        else
+        {
+            outSize = this->enc_->Decrypt(static_cast<char*>(in->data()), inSize, static_cast<char*>(out->data()),
+                                          isLastBlock);
+        }
+        std::cout << "crypt task finish, output size=" << outSize << ", last=" << isLastBlock << std::endl;
+        out->set_size(outSize);
+        out->set_is_last_block(isLastBlock);
+        if (this->next_)
+        {
             this->next_->PushBack(out);
         }
-        if (data->end()) {
+        if (isLastBlock)
+        {
             break;
         }
     }

@@ -8,9 +8,11 @@
 
 #include "x_data.h"
 
-bool XWriteTask::Init(const std::string &fileName) {
+bool XWriteTask::Init(const std::string& fileName)
+{
     this->ofs_.open(fileName, std::ios::binary);
-    if (!this->ofs_) {
+    if (!this->ofs_)
+    {
         std::cerr << "file open failed, file is " << fileName << std::endl;
         return false;
     }
@@ -18,16 +20,31 @@ bool XWriteTask::Init(const std::string &fileName) {
     return true;
 }
 
-void XWriteTask::StartImpl() {
+void XWriteTask::StartImpl()
+{
     std::cout << "XWriteTask::StartImpl() start" << std::endl;
-    while (!this->is_exit) {
-        std::shared_ptr<XData> data = PopFront();
-        if (!data) {
+    while (!this->is_exit)
+    {
+        std::shared_ptr<XData> in = PopFront();
+        if (!in)
+        {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
-        this->ofs_.write((char *) data->data(), data->size());
-        if (data->end()) {
+        const int  inSz        = in->size();
+        const bool isLastBlock = in->get_is_last_block();
+        if (inSz > 0)
+        {
+            this->ofs_.write(static_cast<char*>(in->data()), inSz);
+            if (!this->ofs_)
+            {
+                std::cerr << "write, failed" << std::endl;
+                break;
+            }
+        }
+        std::cout << "write " << inSz << " bytes, last=" << isLastBlock << std::endl;
+        if (isLastBlock)
+        {
             break;
         }
     }

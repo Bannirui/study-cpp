@@ -1,2 +1,2 @@
-STUDY-CPP
+STUDY-OpenSSL
 ---

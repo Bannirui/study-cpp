@@ -9,7 +9,7 @@ if (USE_PROXY)
 endif ()
 
 # 项目信息
-project(study-cpp
+project(study-openssl
         VERSION 1.0
         LANGUAGES C CXX
 )
@@ -49,29 +49,12 @@ include(${lib_directory}/OpenSSL.cmake)
 
 # 源文件
 file(GLOB_RECURSE srcs "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-file(GLOB_RECURSE hdrs "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
-
-set(my_exec_targets earth box point_light spot_light scene model)
+file(GLOB_RECURSE hdrs "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp")
 
 # 添加头文件的目的仅仅是为了让IDEA识别到 新建文件的时候添加索引
-add_executable(${PROJECT_NAME} ${srcs} ${hdrs})
-
-# 拷贝资源文件到构建目录和运行目录
-add_custom_target(copy_assets
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/asset" "${CMAKE_CURRENT_BINARY_DIR}/asset"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/asset" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/asset"
-        COMMENT "Copying assets to build and runtime directories"
-)
-
-# 构建时触发资源文件复制
-add_dependencies(${PROJECT_NAME} copy_assets)
-
-# 向项目添加全局的预编译宏
-add_definitions(-DDEBUG)
-
-if (APPLE)
-    # OpenGL的API在mac上被弃用了 防止编译器warn
-    add_definitions(-DGL_SILENCE_DEPRECATION)
-endif ()
-
+add_library(${PROJECT_NAME} ${srcs} ${hdrs})
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+
+include(CTest)
+enable_testing()
+add_subdirectory(tests)

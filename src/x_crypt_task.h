@@ -8,16 +8,17 @@
 
 class XCrypt;
 
-class XCryptTask : public XIOStream {
+class XCryptTask : public XIOStream
+{
 public:
-    void Init(std::string &password);;
+    void Init(std::string& password);
 
-    void set_is_encrypt(int encrypt) { this->is_encrypt_ = encrypt; }
+    void set_is_encrypt(bool flag) { this->is_encrypt_ = flag; }
 
 private:
     void StartImpl() override;
 
 private:
     std::shared_ptr<XCrypt> enc_;
-    bool is_encrypt_ = true;
+    bool                    is_encrypt_ = true;
 };

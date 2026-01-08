@@ -8,44 +8,54 @@
 
 #include "x_data.h"
 
-bool XReadTask::Init(const std::string &file_name) {
-    if (file_name.empty()) {
+bool XReadTask::Init(const std::string& file_name)
+{
+    if (file_name.empty())
+    {
         return false;
     }
     ifs_.open(file_name, std::ios::binary);
-    if (!ifs_) {
+    if (!ifs_)
+    {
         std::cerr << "Failed to open file " << file_name << std::endl;
         return false;
     }
     std::cout << file_name << " open succ" << std::endl;
-    ifs_.seekg(0, std::ios::end);
-    data_byte_ = ifs_.tellg();
-    ifs_.seekg(0, std::ios::beg);
-    std::cout << "file size is " << data_byte_ << std::endl;
+    this->ifs_.seekg(0, std::ios::end);
+    this->data_byte_ = this->ifs_.tellg();
+    this->ifs_.seekg(0, std::ios::beg);
+    std::cout << "file size is " << data_byte_ << " bytes" << std::endl;
     return true;
 }
 
-void XReadTask::StartImpl() {
+void XReadTask::StartImpl()
+{
     std::cout << "XReadTask::StartImpl() start" << std::endl;
-    while (!is_exit) {
-        if (ifs_.eof()) {
-            break;
-        }
+    const int dataSize = 1024;
+    while (!this->is_exit)
+    {
         std::shared_ptr<XData> data = XData::Make(this->mem_pool_);
-        int dataSize = 1024;
-        void *buf = data->New(dataSize);
-        ifs_.read((char *) buf, sizeof(buf));
-        if (ifs_.gcount() <= 0) {
+        void*                  buf  = data->New(dataSize);
+        ifs_.read(static_cast<char*>(buf), dataSize);
+        std::streamsize n = this->ifs_.gcount();
+        if (n <= 0)
+        {
             break;
         }
-        data->set_size(ifs_.gcount());
-        std::cout << "read " << ifs_.gcount() << " bytes, data is " << (char *) buf << std::endl;
-        if (this->ifs_.eof()) {
-            std::cout << "read eof" << std::endl;
-            data->set_end(true);
+        data->set_size(static_cast<int>(n));
+        std::cout << "read " << ifs_.gcount() << " bytes, data is " << (char*)buf << std::endl;
+        if (n < dataSize)
+        {
+            data->set_is_last_block(true);
+            std::cout << "read last block" << std::endl;
         }
-        if (this->next_) {
+        if (this->next_)
+        {
             this->next_->PushBack(data);
+        }
+        if (data->get_is_last_block())
+        {
+            break;
         }
     }
     this->ifs_.close();

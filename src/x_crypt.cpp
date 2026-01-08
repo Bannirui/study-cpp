@@ -79,7 +79,9 @@ int XCrypt::Decrypt(const char *in_data, int in_size, char *out_data, bool is_en
             data_size = block_size - out[7];
             if (data_size == 0) {
                 break;
-            } else if (data_size < 0) {
+            }
+            if (data_size < 0)
+            {
                 std::cerr << "Decrypt failed, padding size is error" << std::endl;
                 break;
             }
